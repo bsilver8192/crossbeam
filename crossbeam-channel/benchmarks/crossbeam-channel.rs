@@ -41,6 +41,26 @@ fn spsc(cap: Option<usize>) {
     .unwrap();
 }
 
+fn spsc_sync(cap: Option<usize>) {
+    let (tx1, rx1) = new(cap);
+    let (tx2, rx2) = new(cap);
+
+    crossbeam::scope(|scope| {
+        scope.spawn(|_| {
+            for i in 0..MESSAGES {
+                tx1.send(message::new(i)).unwrap();
+                rx2.recv().unwrap();
+            }
+        });
+
+        for i in 0..MESSAGES {
+            rx1.recv().unwrap();
+            tx2.send(message::new(i)).unwrap();
+        }
+    })
+    .unwrap();
+}
+
 fn mpsc(cap: Option<usize>) {
     let (tx, rx) = new(cap);
 
@@ -159,29 +179,30 @@ fn main() {
         };
     }
 
-    run!("bounded0_mpmc", mpmc(Some(0)));
-    run!("bounded0_mpsc", mpsc(Some(0)));
-    run!("bounded0_select_both", select_both(Some(0)));
-    run!("bounded0_select_rx", select_rx(Some(0)));
-    run!("bounded0_spsc", spsc(Some(0)));
+    //run!("bounded0_mpmc", mpmc(Some(0)));
+    //run!("bounded0_mpsc", mpsc(Some(0)));
+    //run!("bounded0_select_both", select_both(Some(0)));
+    //run!("bounded0_select_rx", select_rx(Some(0)));
+    //run!("bounded0_spsc", spsc(Some(0)));
 
-    run!("bounded1_mpmc", mpmc(Some(1)));
-    run!("bounded1_mpsc", mpsc(Some(1)));
-    run!("bounded1_select_both", select_both(Some(1)));
-    run!("bounded1_select_rx", select_rx(Some(1)));
-    run!("bounded1_spsc", spsc(Some(1)));
+    //run!("bounded1_mpmc", mpmc(Some(1)));
+    //run!("bounded1_mpsc", mpsc(Some(1)));
+    //run!("bounded1_select_both", select_both(Some(1)));
+    //run!("bounded1_select_rx", select_rx(Some(1)));
+    //run!("bounded1_spsc", spsc(Some(1)));
 
-    run!("bounded_mpmc", mpmc(Some(MESSAGES)));
-    run!("bounded_mpsc", mpsc(Some(MESSAGES)));
-    run!("bounded_select_both", select_both(Some(MESSAGES)));
-    run!("bounded_select_rx", select_rx(Some(MESSAGES)));
-    run!("bounded_seq", seq(Some(MESSAGES)));
-    run!("bounded_spsc", spsc(Some(MESSAGES)));
+    //run!("bounded_mpmc", mpmc(Some(MESSAGES)));
+    //run!("bounded_mpsc", mpsc(Some(MESSAGES)));
+    //run!("bounded_select_both", select_both(Some(MESSAGES)));
+    //run!("bounded_select_rx", select_rx(Some(MESSAGES)));
+    //run!("bounded_seq", seq(Some(MESSAGES)));
+    //run!("bounded_spsc", spsc(Some(MESSAGES)));
 
-    run!("unbounded_mpmc", mpmc(None));
-    run!("unbounded_mpsc", mpsc(None));
-    run!("unbounded_select_both", select_both(None));
-    run!("unbounded_select_rx", select_rx(None));
-    run!("unbounded_seq", seq(None));
-    run!("unbounded_spsc", spsc(None));
+    //run!("unbounded_mpmc", mpmc(None));
+    //run!("unbounded_mpsc", mpsc(None));
+    //run!("unbounded_select_both", select_both(None));
+    //run!("unbounded_select_rx", select_rx(None));
+    //run!("unbounded_seq", seq(None));
+    //run!("unbounded_spsc", spsc(None));
+    run!("unbounded_spsc_sync", spsc_sync(None));
 }
