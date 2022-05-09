@@ -15,6 +15,7 @@ flume = "0.10"
 futures = { version = "0.3", features = ["thread-pool"] }
 lockfree = "0.5.1"
 mpmc = "0.1.5"
+libc = "0.2"
 
 [[bin]]
 name = "atomicring"

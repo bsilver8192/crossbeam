@@ -41,6 +41,50 @@ fn spsc() {
     .unwrap();
 }
 
+fn sync() {
+    let q1 = SegQueue::new();
+    let q2 = SegQueue::new();
+
+    crossbeam::scope(|scope| {
+        scope.spawn(|_| {
+            assert_eq!(
+                unsafe {
+                    libc::sched_setscheduler(
+                        0,
+                        libc::SCHED_FIFO,
+                        &libc::sched_param { sched_priority: 1 },
+                    )
+                },
+                0
+            );
+            for i in 0..MESSAGES {
+                q1.push(message::new(i));
+                while q2.pop().is_none() {
+                    thread::yield_now();
+                }
+            }
+        });
+
+        assert_eq!(
+            unsafe {
+                libc::sched_setscheduler(
+                    0,
+                    libc::SCHED_FIFO,
+                    &libc::sched_param { sched_priority: 2 },
+                )
+            },
+            0
+        );
+        for i in 0..MESSAGES {
+            while q1.pop().is_none() {
+                thread::yield_now();
+            }
+            q2.push(message::new(i));
+        }
+    })
+    .unwrap();
+}
+
 fn mpsc() {
     let q = SegQueue::new();
 
@@ -110,8 +154,9 @@ fn main() {
         };
     }
 
-    run!("unbounded_mpmc", mpmc());
-    run!("unbounded_mpsc", mpsc());
-    run!("unbounded_seq", seq());
-    run!("unbounded_spsc", spsc());
+    //run!("unbounded_mpmc", mpmc());
+    //run!("unbounded_mpsc", mpsc());
+    //run!("unbounded_seq", seq());
+    //run!("unbounded_spsc", spsc());
+    run!("unbounded_sync", sync());
 }
